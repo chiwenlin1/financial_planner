@@ -4,6 +4,7 @@ from datetime import datetime
 class FinancialPlanner:
     def __init__(self):
         self.transactions = []
+        self.savings_goals = []
 
     def add_transaction(self, amount, category, description):
         self.transactions.append({
@@ -53,6 +54,58 @@ class FinancialPlanner:
         except ValueError:
             print("\nPlease enter a valid selection. \n")
 
+    def add_savings_goal(self, name, target):
+            self.savings_goals.append({
+                "name": name,
+                "target": target,
+                "deposited": 0.0,
+                "date_created": datetime.now().strftime("%Y-%m-%d")
+            })
+            print(f"\nSavings Goal: '{name}' created.\n")
+
+    def deposit_savings(self):
+        if not self.savings_goals:
+            print("No savings goals available.\n")
+            return
+
+        print("\nSelect a Savings Goal to Deposit into:")
+        for i, goal in enumerate(self.savings_goals):
+            print(f"{i + 1}. {goal['name']} - ${goal['deposited']:.2f} / ${goal['target']:.2f}")
+
+        try:
+            selection = int(input("\nEnter goal number: "))
+            if 1 <= selection <= len(self.savings_goals):
+                amount = float(input("Enter deposit amount: "))
+                selected_goal = self.savings_goals[selection - 1]
+
+                confirm = input(
+                    f"Are you sure you would like to deposit ${amount:.2f} into '{selected_goal['name']}'? (y/n): "
+                ).strip().lower()
+
+                if confirm == "y":
+                    selected_goal["deposited"] += amount
+                    print(
+                        f"Deposited ${amount:.2f} into '{selected_goal['name']}'. "
+                        f"Total: ${selected_goal['deposited']:.2f} / ${selected_goal['target']:.2f}\n"
+                    )
+                else:
+                    print("Deposit canceled.\n")
+            else:
+                print("Invalid selection.\n")
+        except ValueError:
+            print("Please enter valid numeric input.\n")
+
+    def show_savings_goals(self):
+        if not self.savings_goals:
+            print("No savings plans found.\n")
+            return
+
+        print("\nSavings Goals:")
+        for goal in self.savings_goals:
+            percent = (goal['deposited'] / goal['target']) * 100 if goal['target'] else 0
+            print(f"{goal['name']}: ${goal['deposited']:.2f} / ${goal['target']:.2f} ({percent:.1f}%)")
+        print()
+
     def save_to_file(self, filename="financial.txt"):
         with open(filename, "w") as f:
             for t in self.transactions:
@@ -91,9 +144,10 @@ def main():
         print("1. Add Transactions")
         print("2. Show Transactions")
         print("3. Remove Transaction")
-        print("4. Save Data")
-        print("5. Load Data")
-        print("6. Exit")
+        print("4. Savings")
+        print("5. Save Data")
+        print("6. Load Data")
+        print("7. Exit")
         choice = input("Choose an option: ")
 
         if choice == "1":
@@ -115,10 +169,31 @@ def main():
         elif choice == "3":
             planner.remove_transaction()
         elif choice == "4":
-            planner.save_to_file()
+            savings_type = input(
+                "Would you like to:\n"
+                "1. View all Savings Goals?\n"
+                "2. Add a new Savings Goal\n"
+                "3. Deposit to a Savings Goal\n"
+                "Enter option (1-3): "
+            )
+            if savings_type == "1":
+                planner.show_savings_goals()
+            elif savings_type == "2":
+                name = input("Enter name of savings goal: ")
+                target = float(input("Enter target savings goal: "))
+                planner.add_savings_goal(name, target)
+                print("Savings goal added.\n")
+            elif savings_type == "3":
+                planner.deposit_savings()
+            else:
+                print("Invalid Selection\n")
+
+
         elif choice == "5":
-            planner.load_from_file()
+            planner.save_to_file()
         elif choice == "6":
+            planner.load_from_file()
+        elif choice == "7":
             confirm = input("Would you like to save before exiting? (y/n): ").strip().lower()
             if confirm == "y":
                 planner.save_to_file()
